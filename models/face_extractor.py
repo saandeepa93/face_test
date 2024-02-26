@@ -14,12 +14,13 @@ class FaceFeatureModel(nn.Module):
   def __init__(self, cfg):
     super().__init__()
 
-    bname = "elastic"
-    if bname == "elastic":
+    self.cfg = cfg
+    bname = cfg.TRAINING.MODEL
+    if bname == "ELASTIC":
       self.model = iresnet100(num_features = cfg.TRAINING.FEATS)
       statedict = torch.load('./checkpoints/295672backbone.pth')
     
-    elif bname == "ada":
+    elif bname == "ADA":
       self.model = build_model('ir_101')
       statedict = torch.load('./checkpoints/adaface_ir101_webface12m.ckpt')['state_dict']
       statedict = {key[6:]:val for key, val in statedict.items() if key.startswith('model.')}
@@ -51,8 +52,13 @@ class FaceFeatureModel(nn.Module):
     x_gallery = rearrange(x_gallery, 'b c t h w -> (b t) c h w')
     x_probe = rearrange(x_probe, 'b c t h w -> (b t) c h w')
     
-    z_gallery = self.model(x_gallery)
-    z_probe = self.model(x_probe)
+    if self.cfg.TRAINING.MODEL == "ELASTIC":
+      z_gallery = self.model(x_gallery)
+      z_probe = self.model(x_probe)
+    elif self.cfg.TRAINING.MODEL == "ADA":
+      z_gallery, _ = self.model(x_gallery)
+      z_probe, _ = self.model(x_probe)
+    
 
     _, d = z_gallery.size()
     z_gallery = rearrange(z_gallery, '(b t) d -> b t d', b=b, t=t//2, d=d)

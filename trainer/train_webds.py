@@ -50,8 +50,6 @@ def ddp_setup(args):
 
     torch.cuda.set_device(args.gpu)
     
-
-
 def custom_collate_fn(batch):
   x_g = batch[0]
   x_p = batch[1]
@@ -71,7 +69,6 @@ def custom_collate_fn(batch):
   x1_batch = torch.stack([x1 for x1, x2, _ in batch])
   x2_batch = torch.stack([x2 for x1, x2, _ in batch])
   return x1_batch, x2_batch, batched_json 
-
 
 def preprocess(batch):
   # GALLERY PREPROCESSING
@@ -138,7 +135,6 @@ def preprocess(batch):
   batch['json'] = torch.tensor(labels)
   return batch
 
-
 def nodesplitter(src, group=None):
     if torch.distributed.is_initialized():
         if group is None:
@@ -155,14 +151,13 @@ def nodesplitter(src, group=None):
     else:
         yield from src
 
-
 def prepare_loader(cfg, args):
-
-  train_url = "./data/face_chips/shard-{000000..000010}.tar"
-  val_url = "./data/face_chips/shard-{000011..000014}.tar"
 
   # train_url = "./data/face_chips/shard-{000000..000010}.tar"
   # val_url = "./data/face_chips/shard-{000011..000014}.tar"
+
+  train_url = "./data/face_chips/shard-{000000..000650}.tar"
+  val_url = "./data/face_chips/shard-{000651..000680}.tar"
 
   if cfg.TRAINING.DISTRIBUTED:
     train_urls = list(braceexpand.braceexpand(train_url))
@@ -207,12 +202,10 @@ def prepare_loader(cfg, args):
 
   return train_loader, val_loader
 
-
 def validate(loader, model, criterion):
   total_loss = []
   model.eval()
   for b, (x_g, x_p, label) in enumerate(loader):
-    ic(x_g.size(), x_p.size())
     x = torch.cat([x_g, x_p], dim=2)
     x = x.cuda()
     label = label.cuda()
@@ -299,9 +292,6 @@ if __name__ == "__main__":
   min_loss = 1e5
   pbar = tqdm(range(cfg.TRAINING.ITER))
   for epoch in pbar:
-    # for b, (x_g, x_p, label) in enumerate(train_loader):
-    #   continue
-    # continue
     train_loss = train(train_loader, face_model, optimizer, criterion)
     with torch.no_grad():
       val_loss = validate(train_loader, face_model, criterion)
@@ -310,7 +300,6 @@ if __name__ == "__main__":
       min_loss = val_loss
       
       if args.rank == 0:
-        print("HERE INSIDE")
         ckp_dict = {
           'state_dict': face_model.module.state_dict(),
           'optimizer_state_dict': optimizer.state_dict(),

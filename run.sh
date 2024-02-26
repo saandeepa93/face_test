@@ -3,7 +3,6 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=saandeepaath@usf.edu
 #SBATCH --nodes=1
-#SBATCH --exclusive
 #SBATCH --ntasks-per-node=4
 #SBATCH --gres=gpu:4
 #SBATCH --mem=120gb
@@ -29,4 +28,4 @@ echo "MASTER_ADDR="$MASTER_ADDR
 module load apps/anaconda
 source /apps/anaconda3/5.3.1/etc/profile.d/conda.sh
 conda activate torch_faces
-NCCL_DEBUG=INFO srun python ./trainer/train_webds.py --config briar_4
+NCCL_DEBUG=INFO srun python ./trainer/train_webds.py --config briar_5
