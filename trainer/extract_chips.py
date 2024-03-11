@@ -84,10 +84,7 @@ if __name__ == "__main__":
   db = args.config.split("_")[0]
   config_path = os.path.join(f"./configs/experiments/", f"{args.config}.yaml")
 
-  ckp_path = f"./checkpoints/{args.config}"
-  mkdir(ckp_path)
-
-  writer = SummaryWriter(f'./runs/{args.config}')
+  # writer = SummaryWriter(f'./runs/{args.config}')
 
   # LOAD CONFIGURATION
   cfg = get_cfg_defaults()
@@ -101,10 +98,10 @@ if __name__ == "__main__":
   # LOADER
   train_loader, val_loader = prepare_loader(cfg)
   
-  output_shard_pattern = "./data/face_chips/shard-%06d.tar"
+  output_shard_pattern = "./data/face_chips/val/shard-%06d.tar"
   sink =  wds.ShardWriter(output_shard_pattern, maxcount=10, maxsize=10e9, verbose=0)
   import io
-  for b, (x_g, x_p, meta) in enumerate(tqdm(train_loader)):
+  for b, (x_g, x_p, meta) in enumerate(tqdm(val_loader)):
     buffer_g = io.BytesIO()
     torch.save(x_g.contiguous().cpu().detach(), buffer_g)  # Move tensor to CPU before serialization
     image_bytes_g = buffer_g.getvalue()
@@ -129,7 +126,7 @@ if __name__ == "__main__":
 
 
   sink.close()
-  with open('./data/completed_tars.pkl', 'wb') as file:
+  with open('./data/completed_tars_val.pkl', 'wb') as file:
     # Use pickle.dump() to serialize and save the list to the file
     pickle.dump(train_loader.dataset.completed, file)
   

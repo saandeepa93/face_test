@@ -28,6 +28,8 @@ _C.TRAINING.MODEL="ELASTIC"
 
 _C.TEST = CN()
 _C.TEST.FOLD = 1
+_C.TEST.GDIR = ""
+_C.TEST.PDIR = ""
 
 def get_cfg_defaults():
   """Get a yacs CfgNode object with default values for my_project."""

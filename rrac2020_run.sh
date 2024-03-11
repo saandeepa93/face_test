@@ -2,9 +2,9 @@
 #SBATCH --job-name=train_base
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=saandeepaath@usf.edu
-#SBATCH --nodes=3
-#SBATCH --ntasks-per-node=3
-#SBATCH --gres=gpu:3
+#SBATCH --nodes=40
+#SBATCH --ntasks-per-node=1
+#SBATCH --gres=gpu:1
 #SBATCH --mem=120gb
 #SBATCH --cpus-per-task=8
 #SBATCH --output=/shares/rra_sarkar-2135-1003-00/faces/face_verification/slurm_outs/output.%j
@@ -15,7 +15,7 @@
 ### change 5-digit MASTER_PORT as you wish, slurm will raise Error if duplicated with others
 ### change WORLD_SIZE as gpus/node * num_nodes
 export MASTER_PORT=12340
-export WORLD_SIZE=9
+export WORLD_SIZE=40
 
 ### get the first node name as master address - customized for vgg slurm
 ### e.g. master(gnodee[2-5],gnoded1) == gnodee2
