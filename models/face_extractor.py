@@ -72,14 +72,8 @@ class FaceFeatureModel(nn.Module):
     p_x_probe = torch.nan_to_num(p_x_probe)
     p_x_probe = p_x_probe.view(b, t//2, 1)
 
-    norm_emb_gallery = F.normalize(z_gallery, dim=-1)
-    norm_emb_probe = F.normalize(z_probe, dim=-1)
-
-    weighted_emb_gallery = (norm_emb_gallery * p_x_gallery).sum(dim=1)
-    weighted_emb_probe = (norm_emb_probe * p_x_probe).sum(dim=1)
-
-    # weighted_emb_gallery = F.normalize((z_gallery * p_x_gallery).sum(dim=1), dim=-1)
-    # weighted_emb_probe = F.normalize((z_probe * p_x_probe).sum(dim=1), dim=-1)
+    weighted_emb_gallery = F.normalize((z_gallery * p_x_gallery).sum(dim=1), dim=-1)
+    weighted_emb_probe = F.normalize((z_probe * p_x_probe).sum(dim=1), dim=-1)
 
 
     return weighted_emb_gallery, weighted_emb_probe

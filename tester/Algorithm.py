@@ -187,8 +187,8 @@ class Algorithm:
         gallery2 = pd.read_csv(os.path.join(self.source_dir, g2_file))
         gallery = pd.concat([gallery1,gallery2])
 
-        face_scores1_file = os.path.join(self.source_dir,'face_scores_g1.pkl')
-        face_scores2_file = os.path.join(self.source_dir,'face_scores_g2.pkl')
+        face_scores1_file = os.path.join(self.source_dir,'face_scores_g1.npy')
+        face_scores2_file = os.path.join(self.source_dir,'face_scores_g2.npy')
         body_scores1_file = os.path.join(self.source_dir,'body_scores_g1.pkl')
         body_scores2_file = os.path.join(self.source_dir,'body_scores_g2.pkl')
         gait_scores1_file = os.path.join(self.source_dir,'gait_scores_g1.pkl')
@@ -257,20 +257,21 @@ class Algorithm:
             print('body scores:', body_scores.shape)
             print('gait scores:', gait_scores.shape)
             print('fuse scores:', fuse_scores.shape)
-        assert face_scores.shape == body_scores.shape
-        assert face_scores.shape == gait_scores.shape
-        assert face_scores.shape == fuse_scores.shape
+        # assert face_scores.shape == body_scores.shape
+        # assert face_scores.shape == gait_scores.shape
+        # assert face_scores.shape == fuse_scores.shape
 
         # populate 'all' verification results for each modality
-        self.body_verification_all = VerificationResults(body_scores,probes,
-                                                        gallery,algorithm=self.tag+"-Body",label=self.tag+"-Body",color=self.body_color)
+        # self.body_verification_all = VerificationResults(body_scores,probes,
+        #                                                 gallery,algorithm=self.tag+"-Body",label=self.tag+"-Body",color=self.body_color)
         self.face_verification_all = VerificationResults(face_scores,probes,
                                                         gallery,algorithm=self.tag+"-Face",label=self.tag+"-Face",color=self.face_color)
-        self.gait_verification_all = VerificationResults(gait_scores,probes,
-                                                        gallery,algorithm=self.tag+"-Gait",label=self.tag+"-Gait",color=self.gait_color)
-        self.fuse_verification_all = VerificationResults(fuse_scores,probes,
-                                                        gallery,algorithm=self.tag+"-Fuse",label=self.tag+"-Fuse",color=self.fuse_color)
-        
+        # self.gait_verification_all = VerificationResults(gait_scores,probes,
+        #                                                 gallery,algorithm=self.tag+"-Gait",label=self.tag+"-Gait",color=self.gait_color)
+        # self.fuse_verification_all = VerificationResults(fuse_scores,probes,
+        #                                                 gallery,algorithm=self.tag+"-Fuse",label=self.tag+"-Fuse",color=self.fuse_color)
+    
+        e()
         # filter verification results by face included/restricted and control/treatment
         select = probes.face_incl_ctrl
         self.ver_face_incl_ctrl = self.face_verification_all.filterProbes(select,

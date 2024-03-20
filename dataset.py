@@ -73,7 +73,7 @@ class DataAugmentationForVideoMAE(object):
         Stack(roll=False),
         # ADD ANY AUG BEFORE THIS LINE
         ToTorchFormatTensor(div=True),
-        # normalize,
+        normalize,
     ])
 
   def __call__(self, images):
@@ -100,10 +100,30 @@ class BGCDataset(Dataset):
     fname = f"all_files_{mode}.pkl"
     lname = f"all_labels_{mode}.pkl"
     with open(f'/shares/rra_sarkar-2135-1003-00/faces/face_verification/data/{fname}', 'rb') as f:
-      self.all_files = pickle.load(f)
+      # self.all_files = pickle.load(f)
+      all_files = pickle.load(f)
 
     with open(f'/shares/rra_sarkar-2135-1003-00/faces/face_verification/data/{lname}', 'rb') as f:
       self.all_labels = pickle.load(f)
+    ic(len(all_files))
+
+    self.all_files = []
+    for subject_phase_video in self.all_files:
+      subject_phase, selected_vid = subject_phase_video.split('-')
+      selected_vid = int(selected_vid)
+      subject, phase = subject_phase.split('_')
+      subject_dict = load_pickle(f"{subject_phase}", self.cfg.PATHS.ANNOT)
+      probe_video = subject_dict['field']['fpath'][selected_vid]
+      ic(probe_video)
+      distance = probe_video.split('/')[4]
+      ic(probe_video.split('/'))
+      e()
+      if distance in ['close_range', 'closerange']:
+        self.all_files.append(subject_phase_video)
+
+    ic(len(self.all_files))
+    e()
+    
 
     # random.shuffle(self.all_files)
     self.controlled_process_data_dict = {}
@@ -194,8 +214,8 @@ class BGCDataset(Dataset):
     #   selected_field_ind = all_field_ind[:self.cfg.DATASET.CLIP_LGT]
 
 
-    if len(all_field_ind) > 100:
-      selected_field_ind = random.sample(list(all_field_ind), 100)
+    if len(all_field_ind) > 10:
+      selected_field_ind = random.sample(list(all_field_ind), 10)
     else:
       selected_field_ind = all_field_ind
 

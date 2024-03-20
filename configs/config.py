@@ -11,6 +11,8 @@ _C.PATHS.VIS_PATH = "./data/loader"
 _C.PATHS.TEMPLATE = ""
 _C.PATHS.SO_ROOT = ""
 _C.PATHS.OF_SAVE = ""
+_C.PATHS.TAR = ""
+_C.PATHS.OPENFACE = ""
 
 _C.DATASET = CN()
 _C.DATASET.IMG_SIZE=224
@@ -25,11 +27,17 @@ _C.TRAINING.BATCH_SIZE=256
 _C.TRAINING.DISTRIBUTED=False
 _C.TRAINING.FEATS=0
 _C.TRAINING.MODEL="ELASTIC"
+_C.TRAINING.OF=False
+_C.TRAINING.OF_TYPE=""
+_C.TRAINING.OF_PROBE=False
+_C.TRAINING.OF_PROBE_TYPE=""
 
 _C.TEST = CN()
-_C.TEST.FOLD = 1
+_C.TEST.EVAL_PROTOCOL = ""
 _C.TEST.GDIR = ""
 _C.TEST.PDIR = ""
+
+_C.COMMENTS = ""
 
 def get_cfg_defaults():
   """Get a yacs CfgNode object with default values for my_project."""

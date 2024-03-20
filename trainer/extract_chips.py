@@ -71,6 +71,14 @@ class TensorEncoder(json.JSONEncoder):
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 
+
+def save_images(process_data, mode):
+  from torchvision.transforms import ToPILImage
+  imgs = [ ToPILImage()(process_data[:, vid, :, :].cpu().clamp(-1.,1.)) for vid in range(process_data.shape[1])  ]
+  # imgs = [ ToPILImage()(process_data[:, vid, :, :].cpu()) for vid in range(process_data.shape[1])  ]
+  for id, im in enumerate(imgs):
+    im.save(f"./data/vid_loader/{mode}_{id}_1.jpg")
+
 if __name__ == "__main__":
   seed_everything(42)
 
@@ -98,7 +106,7 @@ if __name__ == "__main__":
   # LOADER
   train_loader, val_loader = prepare_loader(cfg)
   
-  output_shard_pattern = "./data/face_chips/val/shard-%06d.tar"
+  output_shard_pattern = "./data/face_chips/close_range/shard-%06d.tar"
   sink =  wds.ShardWriter(output_shard_pattern, maxcount=10, maxsize=10e9, verbose=0)
   import io
   for b, (x_g, x_p, meta) in enumerate(tqdm(val_loader)):
@@ -126,7 +134,7 @@ if __name__ == "__main__":
 
 
   sink.close()
-  with open('./data/completed_tars_val.pkl', 'wb') as file:
+  with open('./data/face_chips/completed_tars_close_range_val.pkl', 'wb') as file:
     # Use pickle.dump() to serialize and save the list to the file
     pickle.dump(train_loader.dataset.completed, file)
   

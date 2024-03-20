@@ -20,6 +20,8 @@ from models import FaceFeatureModel
 # from supCon import SupConLoss
 
 
+
+
 class BTSDataset(Dataset):
   def __init__(self, cfg):
     super().__init__()
@@ -27,27 +29,30 @@ class BTSDataset(Dataset):
     self.cfg = cfg
     self.save = cfg.PATHS.ANNOT
 
-    self.g1_df = pd.read_csv("./data/analysis/eval_4.0.0/Gallery1.csv")
-    self.g2_df = pd.read_csv("./data/analysis/eval_4.0.0/Gallery2.csv")
+    self.eval_protocol = cfg.TEST.EVAL_PROTOCOL
+    root_val_dir = f"./data/analysis/{self.eval_protocol}"
+    self.g1_df = pd.read_csv(f"{root_val_dir}/Gallery1.csv")
+    self.g2_df = pd.read_csv(f"{root_val_dir}/Gallery2.csv")
 
-    self.p_face_incl_ctrl_df = pd.read_csv("./data/analysis/eval_4.0.0/Probe_BTS_briar-rd_FaceIncluded_ctrl.csv")
-    self.p_face_incl_trt_df = pd.read_csv("./data/analysis/eval_4.0.0/Probe_BTS_briar-rd_FaceIncluded_trt.csv")
-    self.p_face_rest_ctrl_df = pd.read_csv("./data/analysis/eval_4.0.0/Probe_BTS_briar-rd_FaceRestricted_ctrl.csv")
-    self.p_face_rest_trt_df = pd.read_csv("./data/analysis/eval_4.0.0/Probe_BTS_briar-rd_FaceRestricted_trt.csv")
+    self.p_face_incl_ctrl_df = pd.read_csv(f"{root_val_dir}/Probe_BTS_briar-rd_FaceIncluded_ctrl.csv")
+    self.p_face_incl_trt_df = pd.read_csv(f"{root_val_dir}/Probe_BTS_briar-rd_FaceIncluded_trt.csv")
+    self.p_face_rest_ctrl_df = pd.read_csv(f"{root_val_dir}/Probe_BTS_briar-rd_FaceRestricted_ctrl.csv")
+    self.p_face_rest_trt_df = pd.read_csv(f"{root_val_dir}/Probe_BTS_briar-rd_FaceRestricted_trt.csv")
 
-    # self._getAllGallery(self.g1_df, "Gallery1")
-    # self._getAllGallery(self.g2_df, "Gallery2")
-    # self._getAllProbe(self.p_face_incl_ctrl_df, "face_incl_ctrl")
-    # self._getAllProbe(self.p_face_incl_trt_df, "face_incl_trt")
-    # self._getAllProbe(self.p_face_rest_ctrl_df, "face_rest_ctrl")
-    # self._getAllProbe(self.p_face_rest_trt_df, "face_rest_trt")
+    self._getAllGallery(self.g1_df, "Gallery1")
+    self._getAllGallery(self.g2_df, "Gallery2")
+    self._getAllProbe(self.p_face_incl_ctrl_df, "face_incl_ctrl")
+    self._getAllProbe(self.p_face_incl_trt_df, "face_incl_trt")
+    self._getAllProbe(self.p_face_rest_ctrl_df, "face_rest_ctrl")
+    self._getAllProbe(self.p_face_rest_trt_df, "face_rest_trt")
 
     # YET TO RUN
 
   def _getAllGallery(self, df, mode):
     not_found = []
     subjects = df['subjectId'].apply(lambda x: x[2:-2]).unique().tolist()
-    print(len(subjects))
+    save_dir = f"{self.save}/{self.eval_protocol}/{mode}"
+    mkdir(save_dir)
     for sub in subjects:
       subject_dict = {
           "jpeg":{
@@ -57,13 +62,16 @@ class BTSDataset(Dataset):
             "fpath": [], "bbox": [], 'frame_num': []
           }
       } 
+
+      if self.eval_protocol == "eval_3.1.1":
+        df['media_format'] =  df['filepath'].apply(lambda x: x.split('/')[-1].split("/")[-1])
       df_filtered = df.loc[df['subjectId'] == f"['{sub}']", ["filepath", "media_format"]]
       df_filtered["bbox_path"] =  self.cfg.PATHS.FACE + "BGC" + df_filtered['filepath'].apply(lambda x: x.split('/')[1][-1]) + "/" + df_filtered['filepath'] + ".csv"
       df_filtered['filepath'] = self.cfg.PATHS.ROOT +  "BGC" + df_filtered['filepath'].apply(lambda x: x.split('/')[1][-1]) + "/" + df_filtered['filepath']
 
-      if sub == "G02419":
-        df_filtered.to_csv("./data/sampleG2.csv")
-        e()
+      # if sub == "G02419":
+      #   df_filtered.to_csv("./data/sampleG2.csv")
+      #   e()
 
       cnt = 0
       for _, row in df_filtered.iterrows():
@@ -104,10 +112,9 @@ class BTSDataset(Dataset):
         print(f"Subject {sub} not found at all!!!")
         not_found.append(sub)
       else:
-        with open(f'{self.save}/{mode}/{sub}_rel.pickle', 'wb') as f:
+
+        with open(f'{save_dir}/{sub}_rel.pickle', 'wb') as f:
           pickle.dump(subject_dict, f, pickle.HIGHEST_PROTOCOL)
-    # with open(f'./data/analysis/not_found.pickle', 'wb') as f:
-    #   pickle.dump(not_found, f, pickle.HIGHEST_PROTOCOL)
 
   def _getAllProbe(self, df, mode):
     subject_dict = {
@@ -115,7 +122,8 @@ class BTSDataset(Dataset):
           "fpath": [], "bbox": [], 'frame_num': []
         }
       } 
-    
+    save_dir = f"{self.save}/{self.eval_protocol}/{mode}"
+    mkdir(save_dir)
     df["bbox_path"] =  self.cfg.PATHS.FACE + "BGC" + df['media_path'].apply(lambda x: x.split('/')[1][-1]) + "/" + df['media_path'] + ".csv"
     df['media_path'] = self.cfg.PATHS.ROOT +  "BGC" + df['media_path'].apply(lambda x: x.split('/')[1][-1]) + "/" + df['media_path']
     df['fname'] = df['media_path'].apply(lambda x: x.split('/')[-1].split('.')[0])
@@ -148,7 +156,8 @@ class BTSDataset(Dataset):
       subject_dict['mp4']['bbox'] = bbox
       subject_dict['mp4']['frame_num'] = frame_num
 
-      with open(f"{self.save}/{mode}/{row['fname']}_rel.pickle", 'wb') as f:
+      
+      with open(f"{save_dir}/{row['fname']}_rel.pickle", 'wb') as f:
         pickle.dump(subject_dict, f, pickle.HIGHEST_PROTOCOL)
 
     with open(f'./data/analysis/not_found_probe.pickle', 'wb') as f:
@@ -156,8 +165,9 @@ class BTSDataset(Dataset):
 
 
 
-def extract_gallery_template(loader,mode):
-  template_save_path = f"./data/templates/{mode}"
+def extract_gallery_template(loader,mode, ckp_config):
+  template_save_path = f"./data/templates/{ckp_config}/{mode}"
+  mkdir(template_save_path)
   subject_lst = []
   prob_lst = []
   feats_lst = []
@@ -165,6 +175,7 @@ def extract_gallery_template(loader,mode):
     for b, (x, subject) in enumerate(tqdm(loader)):
       btc, c, t, h, w = x.size()
       x = x.cuda()
+
       x = rearrange(x, 'b c t h w -> (b t) c h w')
       feats, _ = face_model.model(x)
 
@@ -194,8 +205,9 @@ def extract_gallery_template(loader,mode):
     with open(os.path.join(template_save_path, f"meta_info_{mode}.json"), 'w') as fp:
       json.dump(meta_info, fp, indent=4)
 
-def extract_probe_template(loader, mode):
-  template_save_path = f"./data/templates/{mode}"
+def extract_probe_template(loader, mode, ckp_config):
+  template_save_path = f"./data/templates/{ckp_config}/{mode}"
+  mkdir(template_save_path)
   meta_info = {}
   with torch.no_grad():
     for b, (x, subject) in enumerate(tqdm(loader)):
@@ -222,20 +234,25 @@ def extract_probe_template(loader, mode):
 if __name__ == "__main__":
   seed_everything(42)
 
+  parser = argparse.ArgumentParser(description="Vision Transformers")
+  parser.add_argument('--config', type=str, default='default', help='configuration to load')
+  parser.add_argument('--mode', type=str, default='Gallery1', help='configuration to load')
+    # DDP configs:
+  args = parser.parse_args()
+
   torch.autograd.set_detect_anomaly(True)
   torch.cuda.empty_cache()
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   torch.autograd.set_detect_anomaly(True)
   print("GPU: ", torch.cuda.is_available())
 
-  args = get_args()
+  # args = get_args()
+  
   db = args.config.split("_")[0]
   config_path = os.path.join(f"./configs/experiments/", f"{args.config}.yaml")
 
-  ckp_config = "briar_8"
+  ckp_config = "briar_9"
   ckp_path = f"./checkpoints/{ckp_config}"
-
-
 
   # LOAD CONFIGURATION
   cfg = get_cfg_defaults()
@@ -244,32 +261,28 @@ if __name__ == "__main__":
   # dataset = BTSDataset(cfg)
   # e()
 
-  # DDP TRAINING
-  # output_shard_pattern = "./data/face_chips/test/4.0.0/shard-%06d.tar"
-  # sink =  wds.ShardWriter(output_shard_pattern, maxcount=10, maxsize=10e9, verbose=0)
-
   mode_lst = ['Gallery1', 'Gallery2', 'face_incl_ctrl', 'face_incl_trt', 'face_rest_ctrl', 'face_rest_trt']
-  # mode_lst = ['face_incl_ctrl', 'face_incl_trt', 'face_rest_ctrl', 'face_rest_trt']
-  mode = "face_rest_trt"
- 
+  
   # LOAD MODEL
   face_model = FaceFeatureModel(cfg)
   face_model = face_model.to(device)
-  # LOAD CKPT
   checkpt = torch.load(f"{ckp_path}/model_final.pt", map_location=device)
   sd = {k:v for k, v in checkpt['state_dict'].items()}
   state = face_model.state_dict()
   state.update(sd)
   face_model.load_state_dict(state, strict=True)
   face_model.eval()
-
+  
+  # for mode in mode_lst:
+  
+  mode = args.mode
   # for mode in mode_lst:
   dataset = BTSTarDataset(cfg, mode)
   loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=6)
   
   if mode in ["Gallery1", "Gallery2"]:
-    extract_gallery_template(loader, mode)
+    extract_gallery_template(loader, mode, ckp_config)
   else:
-    extract_probe_template(loader, mode)
-    
+    extract_probe_template(loader, mode, ckp_config)
+  
      

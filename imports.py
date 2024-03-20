@@ -14,3 +14,4 @@ import pickle
 import itertools
 import time
 from collections import Counter
+from functools import partial

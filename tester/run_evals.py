@@ -35,7 +35,13 @@ import pickle as pkl
 # from briar_analysis.CovariateTools import populateMoreFields, multiHistogram
 # from briar_analysis.Algorithm import Algorithm
 # import briar_analysis as ba
-from VerificationResults import VerificationResults
+# from VerificationResults import VerificationResults
+
+from Algorithm import Algorithm
+
+from constants import *
+
+
 
 
 
@@ -67,7 +73,7 @@ def computeROC(masks, scores):
     ic(f"TAR @ FAR={far}: {tar}")
 
 
-def plot_roc_basic(score_matrix, mask_matrix, fname, cname, rndm=False):
+def plot_roc_basic(score_matrix, mask_matrix, cname, rndm=False):
 
   scores = score_matrix.flatten().copy()
   mask = mask_matrix.flatten()
@@ -103,26 +109,30 @@ def plot_roc_basic(score_matrix, mask_matrix, fname, cname, rndm=False):
   # show the legend
   plt.legend()
   # show the plot
-  plt.savefig(f"./data/results/rest.png")
+  plt.savefig(f"./data/results/rest_{cname}.png")
   # plt.close()
 
 if __name__ == "__main__":
+
   SOURCE_DIR = "./data/analysis/eval_4.0.0"
   NAN = float('nan')
   FACE_COLOR = 'blue'
   alg_label = "test"
+  configs = "briar_9"
 
-  SCORE_DIR = "./data/score_files"
+  SCORE_DIR = f"./data/score_files/{configs}"
 
-  probes = pd.read_csv(os.path.join(SOURCE_DIR,'Probe_BTS_briar-rd_FaceRestricted_ctrl.csv'))
-  gallery = pd.read_csv(os.path.join(SOURCE_DIR,'Gallery1.csv'))
+  all_files = glob.glob(os.path.join(SCORE_DIR, "*.npy"))
 
-  # face_scores = pkl.load(open(os.path.join(SCORE_DIR,'face_mask_Gallery1.pkl.npy'),'rb'))
-  # face_verification = VerificationResults(face_scores,probes,gallery,algorithm=alg_label+"-Face",label='All',color=FACE_COLOR)
-  # roc, auc = face_verification.createRoc()
-  score_matrix = np.load(os.path.join(SCORE_DIR,'face_score_Gallery1.pkl.npy'))
-  mask_matrix = np.load(os.path.join(SCORE_DIR,'face_mask_Gallery1.pkl.npy'))
+  gmodes = ["Gallery1"]
+  # pmodes = ['face_incl_ctrl','face_incl_trt']
+  pmodes = ['face_incl_ctrl']
 
+  for gmode in gmodes:
+    for pmode in pmodes:
 
-  plot_roc_basic(score_matrix, mask_matrix, "incl_trt", "Treatment")
-  computeROC(mask_matrix, score_matrix)
+      score_matrix = np.load(os.path.join(SCORE_DIR,f'face_score_{gmode}_{pmode}.pkl.npy'))
+      mask_matrix = np.load(os.path.join(SCORE_DIR,f'face_mask_{gmode}_{pmode}.pkl.npy'))
+      plot_roc_basic(score_matrix, mask_matrix, pmode)
+      ic(f"MODE: {pmode}, {gmode}")
+      computeROC(mask_matrix, score_matrix)

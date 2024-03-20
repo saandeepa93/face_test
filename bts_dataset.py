@@ -73,7 +73,7 @@ class DataAugmentationForVideoMAE(object):
         Stack(roll=False),
         # ADD ANY AUG BEFORE THIS LINE
         ToTorchFormatTensor(div=True),
-        normalize,
+        # normalize,
     ])
 
   def __call__(self, images):
@@ -96,8 +96,9 @@ class BTSTarDataset(Dataset):
     self.mode = mode 
     
     self.transform = DataAugmentationForVideoMAE(cfg)
+    self.scale = lambda x: (x - x.min()) / (x.max() - x.min())
 
-    all_files = glob.glob(f"{cfg.PATHS.ANNOT}/{mode}/*.pickle")
+    all_files = glob.glob(f"{cfg.PATHS.ANNOT}/{cfg.TEST.EVAL_PROTOCOL}/{mode}/*.pickle")
     print(len(all_files))
 
     if self.mode in ["Gallery1", "Gallery2"]:
@@ -173,45 +174,9 @@ class BTSTarDataset(Dataset):
 
       process_data_g = process_data.contiguous().view((len(selected_controlled_frames), 3) + process_data.size()[-2:]).transpose(0,1)
 
-      # # ****LOAD FIELD VIDEO****
-      # img_all = []
-      # for selected_vid in range(len( subject_dict['mp4']['frame_num'])):
-      #   tmp_path =  subject_dict['mp4']['fpath'][selected_vid]
-      #   p1 = self.cfg.PATHS.ROOT
-      #   p2 = f"BGC{tmp_path.split('/')[3][-1]}"
-      #   p3 = tmp_path.replace("../faces/face_verification", "")
-      #   field_fpath = f"{p1}{p2}{p3}"
-        
-      #   # field_fpath = os.path.join(self.cfg.PATHS.ROOT, subject_dict['mp4']['fpath'][selected_vid])
-      #   all_field_frames = subject_dict['mp4']['frame_num'][selected_vid]
-      #   all_field_bboxes = subject_dict['mp4']['bbox'][selected_vid]
-        
-      #   all_field_ind = np.arange(len(all_field_frames))
+      process_data_g = self.scale(process_data_g)
+      process_data_g = (process_data_g - 0.5)/0.5
 
-      #   if len(all_field_ind) > 100:
-      #     selected_field_ind = random.sample(list(all_field_ind), 100)
-      #   else:
-      #     selected_field_ind = all_field_ind
-
-
-      #   selected_field_frames = [all_field_frames[k] for k in selected_field_ind]
-      #   selected_field_bboxes = [all_field_bboxes[k] for k in selected_field_ind]
-
-      #   images = self._loadFieldVid(field_fpath, selected_field_frames, selected_field_bboxes)
-      #   process_data = self.transform(images)
-
-      #   process_data_p = process_data.contiguous().view((len(selected_field_ind), 3) + process_data.size()[-2:]).transpose(0,1)
-      # img_all.append(process_data)
-      # # save_images(self.cfg, process_data, subject, "field")
-      # cls_p = f"{subject}"
-
-      # ic(process_data_g.size(), len(img_all))
-      meta_info = {
-        "gallery": selected_controlled_fpaths,
-        # "probe": cls_p, 
-        # "probe_frames": selected_field_frames 
-      }
-      print(process_data_g.size())
       return process_data_g, subject
 
     else:
@@ -234,6 +199,10 @@ class BTSTarDataset(Dataset):
       process_data = self.transform(images)
 
       process_data_p = process_data.contiguous().view((len(selected_field_ind), 3) + process_data.size()[-2:]).transpose(0,1)
+
+      process_data_p = self.scale(process_data_p)
+      process_data_p = (process_data_p - 0.5)/0.5
+  
 
       meta_info = {
         # "gallery": selected_controlled_fpaths,

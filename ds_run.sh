@@ -12,8 +12,8 @@ module load apps/anaconda
 source /apps/anaconda3/5.3.1/etc/profile.d/conda.sh
 conda activate torch_faces
 
-# srun python ./trainer/train_webds.py --config briar_7
+srun python ./trainer/filter_tars.py --config briar_8
 # srun python ./trainer/extract_chips.py --config briar_2
 # srun python ./process/extract_chips.py --config briar_3
 # srun python ./trainer/read_chips.py
-srun python playground.py
+# srun python playground.py

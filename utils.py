@@ -57,7 +57,7 @@ def natural_keys(text):
 
 def mkdir(path):
   if not os.path.isdir(path):
-    os.mkdir(path)
+    os.makedirs(path)
 
 
 def get_args():
@@ -88,6 +88,18 @@ def seed_everything(seed):
   torch.cuda.manual_seed_all(seed)
   torch.backends.cudnn.deterministic = True
 
+
+def computeROC(masks, scores):
+  scores = scores.flatten().copy()
+  labels = masks.flatten()
+  fpr, tpr, thresholds = roc_curve(labels, scores)
+  fpr_levels = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
+  f_interp = interpolate.interp1d(fpr, tpr)
+  tpr_ar_fpr = [f_interp(x) for x in fpr_levels]
+  results_dict = {}
+  for (far, tar) in zip (fpr_levels, tpr_ar_fpr):
+    results_dict[far] = tar
+  return results_dict
 
 def get_metrics(y_true, y_pred):
   acc = accuracy_score(y_true, y_pred)
